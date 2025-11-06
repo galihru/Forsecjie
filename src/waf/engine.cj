@@ -2,6 +2,7 @@ package forsecjie.waf
 
 import std.collections.*
 import forsecjie.core.*
+import forsecjie.plugins.*
 
 public class WAFEngine {
     private let cfg: WAFConfig
@@ -10,6 +11,7 @@ public class WAFEngine {
     private let pathLimiter: FixedWindowRateLimiter
     private let sig: SignatureEngine
     private let anomaly: AnomalyEngine
+    private let plugins: Array<SecurityPlugin>
 
     public init(cfg: WAFConfig) {
         this.cfg = cfg
@@ -18,6 +20,10 @@ public class WAFEngine {
         this.pathLimiter = FixedWindowRateLimiter(cfg.pathRate)
         this.sig = SignatureEngine()
         this.anomaly = AnomalyEngine()
+        this.plugins = Array<SecurityPlugin>()
+        this.plugins.add(BotDetectionPlugin())
+        this.plugins.add(GeoIpPlugin())
+        this.plugins.add(JwtPlugin("Authorization"))
     }
 
     public func evaluate(ctx: RequestContext, nowMs: Int64): Decision {
@@ -30,20 +36,20 @@ public class WAFEngine {
 
         let ipOk = this.ipLimiter.allow(ipKey, nowMs)
         if (!ipOk) {
-            let id = this.alerts.nextAlertId()
-            let a = Alert(id, nowMs, AlertLevel.High, 40, ctx.ip, ctx.method, ctx.path, "RL_IP", "Rate limit exceeded by ip")
-            this.alerts.push(a)
-            alertsList.add(a)
+            let id1 = this.alerts.nextAlertId()
+            let a1 = Alert(id1, nowMs, AlertLevel.High, 40, ctx.ip, ctx.method, ctx.path, "RL_IP", "Rate limit exceeded by ip")
+            this.alerts.push(a1)
+            alertsList.add(a1)
             score = score + 40
             reasons.add("RL_IP")
         }
 
         let pathOk = this.pathLimiter.allow(pathKey, nowMs)
         if (!pathOk) {
-            let id = this.alerts.nextAlertId()
-            let a = Alert(id, nowMs, AlertLevel.Medium, 30, ctx.ip, ctx.method, ctx.path, "RL_PATH", "Rate limit exceeded by path")
-            this.alerts.push(a)
-            alertsList.add(a)
+            let id2 = this.alerts.nextAlertId()
+            let a2 = Alert(id2, nowMs, AlertLevel.Medium, 30, ctx.ip, ctx.method, ctx.path, "RL_PATH", "Rate limit exceeded by path")
+            this.alerts.push(a2)
+            alertsList.add(a2)
             score = score + 30
             reasons.add("RL_PATH")
         }
@@ -51,24 +57,35 @@ public class WAFEngine {
         let uri = ctx.path + "?" + ctx.query
         let sigMatches = this.sig.inspect(uri, ctx.body)
         for (m in sigMatches) {
-            let id = this.alerts.nextAlertId()
-            let level = this.chooseLevel(m.score)
-            let a = Alert(id, nowMs, level, m.score, ctx.ip, ctx.method, ctx.path, m.ruleId, m.message)
-            this.alerts.push(a)
-            alertsList.add(a)
+            let id3 = this.alerts.nextAlertId()
+            let lv3 = this.chooseLevel(m.score)
+            let a3 = Alert(id3, nowMs, lv3, m.score, ctx.ip, ctx.method, ctx.path, m.ruleId, m.message)
+            this.alerts.push(a3)
+            alertsList.add(a3)
             score = score + m.score
             reasons.add(m.ruleId)
         }
 
         let anomalyMatches = this.anomaly.analyze(ctx.path, ctx.query, ctx.body)
-        for (as in anomalyMatches) {
-            let id = this.alerts.nextAlertId()
-            let level = this.chooseLevel(as.score)
-            let a = Alert(id, nowMs, level, as.score, ctx.ip, ctx.method, ctx.path, "ANOMALY", as.reason)
-            this.alerts.push(a)
-            alertsList.add(a)
-            score = score + as.score
-            reasons.add(as.reason)
+        for (am in anomalyMatches) {
+            let id4 = this.alerts.nextAlertId()
+            let lv4 = this.chooseLevel(am.score)
+            let a4 = Alert(id4, nowMs, lv4, am.score, ctx.ip, ctx.method, ctx.path, "ANOMALY", am.reason)
+            this.alerts.push(a4)
+            alertsList.add(a4)
+            score = score + am.score
+            reasons.add(am.reason)
+        }
+
+        for (p in this.plugins) {
+            let pa = p.evaluate(ctx, nowMs)
+            for (a in pa) {
+                let withId = Alert(this.alerts.nextAlertId(), a.createdAtMs, a.level, a.score, a.sourceIp, a.method, a.path, a.ruleId, a.message)
+                this.alerts.push(withId)
+                alertsList.add(withId)
+                score = score + withId.score
+                reasons.add(withId.ruleId)
+            }
         }
 
         var action = DecisionAction.Allow
