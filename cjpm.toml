@@ -1,13 +1,18 @@
 [package]
-name = "Forsecjie"
+name = "forsecjie"
 version = "0.1.0"
-cjc-version = "0.60.5"
+description = "Forsecjie defensive API security gateway using Cangjie"
 output-type = "executable"
+cjc-version = "0.59.4"
+src-dir = "src"
+target-dir = "target"
 compile-option = "-ldl"
+link-option = ""
+override-compile-option = ""
+package-configuration = {}
 
 [dependencies]
 
 [target.x86_64-unknown-linux-gnu]
-
-[target.x86_64-unknown-linux-gnu.bin-dependencies]
-path-option = ["./cangjie-stdx/linux_x86_64_llvm/static/stdx"]
+  [target.x86_64-unknown-linux-gnu.bin-dependencies]
+    path-option = ["/path/to/cangjie_stdx/linux_x86_64_cjnative/static/stdx"]
