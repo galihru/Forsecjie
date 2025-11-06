@@ -1,17 +1,17 @@
-package forsecjie
+package forsecjie.core
 
 import std.collections.*
 
 public enum AlertLevel {
-    Info
-    Low
-    Medium
-    High
+    Info,
+    Low,
+    Medium,
+    High,
     Critical
 }
 
 public enum DecisionAction {
-    Allow
+    Allow,
     Block
 }
 
