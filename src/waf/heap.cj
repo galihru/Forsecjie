@@ -1,6 +1,7 @@
-package forsecjie
+package forsecjie.waf
 
 import std.collections.*
+import forsecjie.core.*
 
 public class AlertHeap {
     private var data: Array<Alert>
@@ -19,11 +20,11 @@ public class AlertHeap {
 
     private func priority(level: AlertLevel): Int32 {
         match (level) {
-            case AlertLevel.Info => 0
-            case AlertLevel.Low => 1
-            case AlertLevel.Medium => 2
-            case AlertLevel.High => 3
-            case AlertLevel.Critical => 4
+            AlertLevel.Info => 0
+            AlertLevel.Low => 1
+            AlertLevel.Medium => 2
+            AlertLevel.High => 3
+            AlertLevel.Critical => 4
         }
     }
 
