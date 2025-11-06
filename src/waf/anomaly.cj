@@ -1,4 +1,4 @@
-package forsecjie
+package forsecjie.waf
 
 import std.collections.*
 
@@ -13,23 +13,19 @@ public class AnomalyEngine {
 
     public func analyze(path: String, query: String, body: String): Array<AnomalyScore> {
         let result = Array<AnomalyScore>()
-
         let pathLen = path.length
         if (pathLen > 2048) {
             result.add(AnomalyScore(30, "Path too long"))
         }
-
         let bodyLen = body.length
-        if (bodyLen > 512000) {
+        if (bodyLen > 524288) {
             result.add(AnomalyScore(40, "Body too large"))
         }
-
         let combined = path + "?" + query + body
         let specials = countSpecial(combined)
         if (specials >= 32) {
             result.add(AnomalyScore(25, "High special-char density"))
         }
-
         result
     }
 
