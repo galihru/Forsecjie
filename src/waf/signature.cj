@@ -1,4 +1,4 @@
-package forsecjie
+package forsecjie.waf
 
 import std.collections.*
 
@@ -75,27 +75,27 @@ public class SignatureEngine {
 
         for (t in this.sqlTokens) {
             if (u.contains(t) || b.contains(t)) {
-                matches.add(SignatureMatch(40, "SIG_SQLI", "SQL injection pattern "+t))
+                matches.add(SignatureMatch(40, "SIG_SQLI", "SQL injection pattern " + t))
             }
         }
         for (t in this.xssTokens) {
             if (u.contains(t) || b.contains(t)) {
-                matches.add(SignatureMatch(35, "SIG_XSS", "XSS pattern "+t))
+                matches.add(SignatureMatch(35, "SIG_XSS", "XSS pattern " + t))
             }
         }
         for (t in this.pathTokens) {
             if (u.contains(t) || b.contains(t)) {
-                matches.add(SignatureMatch(30, "SIG_PATH", "Path traversal pattern "+t))
+                matches.add(SignatureMatch(30, "SIG_PATH", "Path traversal pattern " + t))
             }
         }
         for (t in this.rceTokens) {
             if (u.contains(t) || b.contains(t)) {
-                matches.add(SignatureMatch(50, "SIG_RCE", "Remote code execution pattern "+t))
+                matches.add(SignatureMatch(50, "SIG_RCE", "Remote code execution pattern " + t))
             }
         }
         for (t in this.ssrfTokens) {
             if (u.contains(t) || b.contains(t)) {
-                matches.add(SignatureMatch(45, "SIG_SSRF", "SSRF pattern "+t))
+                matches.add(SignatureMatch(45, "SIG_SSRF", "SSRF pattern " + t))
             }
         }
         for (t in this.log4jTokens) {
