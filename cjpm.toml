@@ -1,0 +1,10 @@
+[package]
+name = "Forsecjie"
+version = "0.1.0"
+description = "Defensive API security gateway using Cangjie: rate limiting, policy engine, alert heap, logging."
+output-type = "executable"
+
+[build]
+target = "native"
+
+[dependencies]
