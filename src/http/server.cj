@@ -27,13 +27,23 @@ public class ForsecjieServer {
         let path = req.path
         let query = req.query
         let body = ""
+        let headers = toHeaderMap(req)
         let nowMs: Int64 = 0
-        let rc = RequestContext(ip, method, path, query, body)
+        let rc = RequestContext(ip, method, path, query, body, headers)
         let decision = this.engine.evaluate(rc, nowMs)
         if (decision.action == DecisionAction.Block) {
             ctx.responseBuilder.status(decision.status).body("Blocked by Forsecjie: " + decision.reason)
         } else {
             ctx.responseBuilder.status(200).body("OK")
         }
+    }
+
+    private func toHeaderMap(req: HttpRequest): HashMap<String, String> {
+        let m = HashMap<String, String>()
+        let names = req.headers.names()
+        for (n in names) {
+            m.put(n, req.headers.getFirst(n))
+        }
+        m
     }
 }
